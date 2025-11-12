@@ -18,12 +18,12 @@ private func c_resize_rgba(_ src: UnsafePointer<UInt8>, _ srcW: Int32, _ srcH: I
 @_silgen_name("encode_png")
 private func c_encode_png(_ rgba: UnsafePointer<UInt8>, _ w: Int32, _ h: Int32, _ outLen: UnsafeMutablePointer<Int32>) -> UnsafeMutablePointer<UInt8>?
 
-public enum ImageC {
+public enum ImageResize {
     
     // MARK: - Format detection
     private enum ImageFormat { case png, jpeg, gif, webp, unknown }
     
-    public func dimensions(of data: Data) -> CGSize {
+    public static func dimensions(of data: Data) -> CGSize {
         switch sniffFormat(data) {
         case .png:
             if let (w, h) = pngHeaderSize(data) {
@@ -36,7 +36,7 @@ public enum ImageC {
         case .gif, .webp, .unknown:
             break
         }
-        if let src = ImageC.decodeToRGBA(data) {
+        if let src = ImageResize.decodeToRGBA(data) {
             return CGSize(width: CGFloat(src.width), height: CGFloat(src.height))
         }
         return CGSize()
@@ -77,7 +77,7 @@ public enum ImageC {
     }
     
     // MARK: - Header-only size reads (fast path)
-    private func pngHeaderSize(_ data: Data) -> (Int, Int)? {
+    private static func pngHeaderSize(_ data: Data) -> (Int, Int)? {
         // PNG IHDR is at fixed offset after 8-byte signature: 8(sig) + 4(len) + 4(\"IHDR\")
         // Then IHDR payload: width(4), height(4)
         guard data.count >= 24 else { return nil }
@@ -92,7 +92,7 @@ public enum ImageC {
         return (w, h)
     }
     
-    private func jpegHeaderSize(_ data: Data) -> (Int, Int)? {
+    private static func jpegHeaderSize(_ data: Data) -> (Int, Int)? {
         // Parse JPEG markers until SOF0/SOF2 to get size
         // Minimal parser for size only
         guard data.count > 4, data[0] == 0xFF, data[1] == 0xD8 else { return nil }
@@ -123,7 +123,7 @@ public enum ImageC {
         return nil
     }
     
-    private func sniffFormat(_ data: Data) -> ImageFormat {
+    private static func sniffFormat(_ data: Data) -> ImageFormat {
         if data.starts(with: [0x89, 0x50, 0x4E, 0x47]) { return .png } // "\x89PNG"
         if data.starts(with: [0xFF, 0xD8, 0xFF]) { return .jpeg }      // JPEG SOI
         if data.starts(with: [0x47, 0x49, 0x46, 0x38]) { return .gif } // "GIF8"
