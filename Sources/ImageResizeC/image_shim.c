@@ -13,7 +13,7 @@
 #include "stb_image.h"
 
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
-#include "stb_image_resize2.h"
+#include "stb_image_resize.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -34,7 +34,7 @@ unsigned char* decode_to_rgba(const unsigned char* bytes, int length, int* out_w
 unsigned char* resize_rgba(const unsigned char* src, int src_w, int src_h, int new_w, int new_h) {
     unsigned char* out = (unsigned char*)malloc(new_w * new_h * 4);
     if (!out) return NULL;
-    int ok = stbir_resize_uint8_linear(src, src_w, src_h, 0, out, new_w, new_h, 0, 4);
+    int ok = stbir_resize_uint8(src, src_w, src_h, 0, out, new_w, new_h, 0, 4);
     if (!ok) {
         free(out);
         return NULL;
